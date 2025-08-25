@@ -3,7 +3,9 @@ from app.services.materia_service import MateriaService
 from app.models.materia import Materia
 from app import db
 from app.validators.materia_validator import validate_materia
+from app.mapping.materia_mapping import MateriaMapping
 
+materia_mapping = MateriaMapping()
 materia_blueprint = Blueprint('materia', __name__)
 
 @materia_blueprint.route('/materias', methods=['GET'])
@@ -33,20 +35,17 @@ def create_materia():
         return jsonify({"error": str(e)}), 400
 
 @materia_blueprint.route('/materia/<hashid:id>', methods=['PUT'])
-def update_materia(id: int):
+def update(id: int):
     data = request.get_json()
-    if not data or 'nombre' not in data:
-        return jsonify({"error": "Datos inválidos"}), 400
     errors = validate_materia(data)
     if errors:
-        return jsonify({'errors': errors}), 400
-    try:
-        materia_actualizada = MateriaService.actualizar_materia(id, data)
-        if not materia_actualizada:
-            return jsonify({"error": "Materia no encontrada"}), 404
-        return jsonify(materia_actualizada.to_dict()), 200
-    except ValueError as e:
-        return jsonify({"error": str(e)}), 400
+        return jsonify({"errors": errors}), 400
+    
+    materia_actualizado = MateriaService.actualizar_materia(id, data)
+    if not materia_actualizado:
+        return jsonify({"error": "Materia no encontrada"}), 404
+    
+    return materia_mapping.dump(materia_actualizado), 200
 
 @materia_blueprint.route('/materia/<hashid:id>', methods=['DELETE'])
 def delete_materia(id: int):

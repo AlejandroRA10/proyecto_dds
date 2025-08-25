@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from app.services.cargo_service import CargoService
 from app.mapping.cargo_mapping import CargoMapping
+from app.validators.cargo_validator import validate_cargo
 
 cargo_bp = Blueprint('cargo', __name__)
 cargo_mapping = CargoMapping()
@@ -29,13 +30,15 @@ def create():
 @cargo_bp.route('/cargo/<hashid:id>', methods=['PUT'])
 def update(id: int):
     data = request.get_json()
-    try:
-        cargo_actualizado = CargoService.actualizar_cargo(id, data)
-        if not cargo_actualizado:
-            return jsonify({"error": "Cargo no encontrado"}), 404
-        return cargo_mapping.dump(cargo_actualizado), 200
-    except ValueError as e:
-        return jsonify({"error": str(e)}), 400
+    errors = validate_cargo(data)
+    if errors:
+        return jsonify({"errors": errors}), 400
+    
+    cargo_actualizado = CargoService.actualizar_cargo(id, data)
+    if not cargo_actualizado:
+        return jsonify({"error": "Cargo no encontrado"}), 404
+    
+    return cargo_mapping.dump(cargo_actualizado), 200
 
 @cargo_bp.route('/cargo/<hashid:id>', methods=['DELETE'])
 def delete(id: int):

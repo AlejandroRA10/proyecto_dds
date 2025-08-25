@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from app.services.grado_service import GradoService
 from app.mapping.grado_mapping import GradoMapping
+from app.validators.grado_validator import validate_grado
 
 grado_bp = Blueprint('grado', __name__)
 grado_mapping = GradoMapping()
@@ -29,13 +30,15 @@ def create():
 @grado_bp.route('/grado/<hashid:id>', methods=['PUT'])
 def update(id: int):
     data = request.get_json()
-    try:
-        grado_actualizado = GradoService.actualizar_grado(id, data)
-        if not grado_actualizado:
-            return jsonify({"error": "Grado no encontrado"}), 404
-        return grado_mapping.dump(grado_actualizado), 200
-    except ValueError as e:
-        return jsonify({"error": str(e)}), 400
+    errors = validate_grado(data)
+    if errors:
+        return jsonify({"errors": errors}), 400
+    
+    grado_actualizado = GradoService.actualizar_grado(id, data)
+    if not grado_actualizado:
+        return jsonify({"error": "Grado no encontrado"}), 404
+    
+    return grado_mapping.dump(grado_actualizado), 200
 
 @grado_bp.route('/grado/<hashid:id>', methods=['DELETE'])
 def delete(id: int):

@@ -2,8 +2,11 @@ from flask import Blueprint, request, jsonify
 from app.services.orientacion_service import OrientacionService
 from app.models.orientacion import Orientacion
 from app import db
+from app.validators.orientacion_validator import validate_orientacion
+from app.mapping.orientacion_mapping import OrientacionMapping
 
 orientacion_blueprint = Blueprint('orientacion', __name__)
+orientacion_mapping = OrientacionMapping()
 
 @orientacion_blueprint.route('/orientaciones', methods=['GET'])
 def get_all_orientaciones():
@@ -29,17 +32,17 @@ def create_orientacion():
         return jsonify({"error": str(e)}), 400
 
 @orientacion_blueprint.route('/orientacion/<hashid:id>', methods=['PUT'])
-def update_orientacion(id: int):
+def update(id: int):
     data = request.get_json()
-    if not data or 'nombre' not in data:
-        return jsonify({"error": "Datos inválidos"}), 400
-    try:
-        orientacion_actualizada = OrientacionService.actualizar_orientacion(id, data)
-        if not orientacion_actualizada:
-            return jsonify({"error": "Orientación no encontrada"}), 404
-        return jsonify(orientacion_actualizada.to_dict()), 200
-    except ValueError as e:
-        return jsonify({"error": str(e)}), 400
+    errors = validate_orientacion(data)
+    if errors:
+        return jsonify({"errors": errors}), 400
+    
+    orientacion_actualizado = OrientacionService.actualizar_orientacion(id, data)
+    if not orientacion_actualizado:
+        return jsonify({"error": "Orientacion no encontrada"}), 404
+    
+    return orientacion_mapping.dump(orientacion_actualizado), 200
 
 @orientacion_blueprint.route('/orientacion/<hashid:id>', methods=['DELETE'])
 def delete_orientacion(id: int):

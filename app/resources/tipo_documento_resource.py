@@ -2,8 +2,11 @@ from flask import Blueprint, request, jsonify
 from app.services.tipo_documento_service import TipoDocumentoService
 from app.models.tipo_documento import TipoDocumento
 from app import db
+from app.validators.tipo_documento_validator import validate_tipo_documento
+from app.mapping.tipo_documento_mapping import TipoDocumentoMapping
 
 tipo_documento_blueprint = Blueprint('tipo_documento', __name__)
+tipo_documento_mapping = TipoDocumentoMapping()
 
 @tipo_documento_blueprint.route('/tipos_documento', methods=['GET'])
 def get_all_tipos_documento():
@@ -29,17 +32,17 @@ def create_tipo_documento():
         return jsonify({"error": str(e)}), 400
 
 @tipo_documento_blueprint.route('/tipo_documento/<hashid:id>', methods=['PUT'])
-def update_tipo_documento(id: int):
+def update(id: int):
     data = request.get_json()
-    if not data or 'nombre' not in data:
-        return jsonify({"error": "Datos inválidos"}), 400
-    try:
-        tipo_documento_actualizado = TipoDocumentoService.actualizar_tipo_documento(id, data)
-        if not tipo_documento_actualizado:
-            return jsonify({"error": "Tipo de documento no encontrado"}), 404
-        return jsonify(tipo_documento_actualizado.to_dict()), 200
-    except ValueError as e:
-        return jsonify({"error": str(e)}), 400
+    errors = validate_tipo_documento(data)
+    if errors:
+        return jsonify({"errors": errors}), 400
+    
+    tipo_documento_actualizado = TipoDocumentoService.actualizar_tipo_documento(id, data)
+    if not tipo_documento_actualizado:
+        return jsonify({"error": "Tipo de documento no encontrado"}), 404
+    
+    return tipo_documento_mapping.dump(tipo_documento_actualizado), 200
 
 @tipo_documento_blueprint.route('/tipo_documento/<hashid:id>', methods=['DELETE'])
 def delete_tipo_documento(id: int):

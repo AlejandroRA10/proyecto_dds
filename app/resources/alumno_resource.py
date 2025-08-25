@@ -35,14 +35,13 @@ def update(id: int):
     data = request.get_json()
     errors = validate_alumno(data)
     if errors:
-        return jsonify({'errors': errors}), 400
-    try:
-        alumno_actualizado = AlumnoService.actualizar_alumno(id, data)
-        if not alumno_actualizado:
-            return jsonify({"error": "Alumno no encontrado"}), 404
-        return alumno_mapping.dump(alumno_actualizado), 200
-    except ValueError as e:
-        return jsonify({"error": str(e)}), 400
+        return jsonify({"errors": errors}), 400
+    
+    alumno_actualizado = AlumnoService.actualizar_alumno(id, data)
+    if not alumno_actualizado:
+        return jsonify({"error": "Alumno no encontrado"}), 404
+    
+    return alumno_mapping.dump(alumno_actualizado), 200
 
 @alumno_bp.route('/alumno/<hashid:id>', methods=['DELETE'])
 def delete(id: int):

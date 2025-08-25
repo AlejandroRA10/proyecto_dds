@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify
 from app.services.departamento_service import DepartamentoService
 from app.mapping.departamento_mapping import DepartamentoMapping
 from app.validators.departamento_validator import validate_departamento
+
 departamento_bp = Blueprint('departamento', __name__)
 departamento_mapping = DepartamentoMapping()
 
@@ -29,19 +30,17 @@ def create():
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
 
-@departamento_bp.route('/departamento/<hashid:id>', methods=['PUT'])
 def update(id: int):
     data = request.get_json()
     errors = validate_departamento(data)
     if errors:
-        return jsonify({'errors': errors}), 400
-    try:
-        departamento_actualizado = DepartamentoService.actualizar_departamento(id, data)
-        if not departamento_actualizado:
-            return jsonify({"error": "Departamento no encontrado"}), 404
-        return departamento_mapping.dump(departamento_actualizado), 200
-    except ValueError as e:
-        return jsonify({"error": str(e)}), 400
+        return jsonify({"errors": errors}), 400
+    
+    departamento_actualizado = DepartamentoService.actualizar_cargo(id, data)
+    if not departamento_actualizado:
+        return jsonify({"error": "Departamento no encontrado"}), 404
+    
+    return departamento_mapping.dump(departamento_actualizado), 200
 
 @departamento_bp.route('/departamento/<hashid:id>', methods=['DELETE'])
 def delete(id: int):

@@ -29,12 +29,14 @@ def create_nota():
 
 # Endpoint para actualizar una nota
 @nota_bp.route('/nota/<int:id>', methods=['PUT'])
-def update_nota(id):
+def update(id: int):
     data = request.get_json()
     errors = validate_nota(data)
     if errors:
-        return jsonify({'errors': errors}), 400
-    nota_actualizada = NotaService.actualizar(id, data)
-    if not nota_actualizada:
-        return jsonify({'error': 'Nota no encontrada'}), 404
-    return nota_mapping.dump(nota_actualizada), 200
+        return jsonify({"errors": errors}), 400
+    
+    nota_actualizado = NotaService.actualizar_nota(id, data)
+    if not nota_actualizado:
+        return jsonify({"error": "Nota no encontrada"}), 404
+    
+    return nota_mapping.dump(nota_actualizado), 200

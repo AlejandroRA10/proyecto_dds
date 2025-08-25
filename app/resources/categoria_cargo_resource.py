@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from app.services.categoria_cargo_service import CategoriaCargoService
 from app.mapping.categoria_cargo_mapping import CategoriaCargoMapping
+from app.validators.categoria_cargo_validator import validate_categoria_cargo
 
 categoria_cargo_bp = Blueprint('categoria_cargo', __name__)
 categoria_cargo_mapping = CategoriaCargoMapping()
@@ -28,16 +29,18 @@ def create():
         return jsonify({"error": str(e)}), 400
 
 @categoria_cargo_bp.route('/categoria_cargo/<hashid:id>', methods=['PUT'])
+
 def update(id: int):
     data = request.get_json()
-    try:
-        categoria_cargo_actualizada = CategoriaCargoService.actualizar_categoria_cargo(
-            id, data)
-        if not categoria_cargo_actualizada:
-            return jsonify({"error": "Categoria de cargo no encontrada"}), 404
-        return categoria_cargo_mapping.dump(categoria_cargo_actualizada), 200
-    except ValueError as e:
-        return jsonify({"error": str(e)}), 400
+    errors = validate_categoria_cargo(data)
+    if errors:
+        return jsonify({"errors": errors}), 400
+    
+    categoria_cargo_actualizado = CategoriaCargoService.actualizar_cargo(id, data)
+    if not categoria_cargo_actualizado:
+        return jsonify({"error": "Categoria cargo no encontrado"}), 404
+    
+    return categoria_cargo_mapping.dump(categoria_cargo_actualizado), 200
 
     def test_borrar_grado(self):
         grado = self.__nuevoGrado()

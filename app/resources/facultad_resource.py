@@ -36,14 +36,13 @@ def update(id: int):
     data = request.get_json()
     errors = validate_facultad(data)
     if errors:
-        return jsonify({'errors': errors}), 400
-    try:
-        facultad_actualizada = FacultadService.actualizar_facultad(id, data)
-        if not facultad_actualizada:
-            return jsonify({"error": "Facultad no encontrada"}), 404
-        return jsonify(facultad_actualizada.to_dict()), 200
-    except ValueError as e:
-        return jsonify({"error": str(e)}), 400
+        return jsonify({"errors": errors}), 400
+    
+    facultad_actualizado = Facultad.actualizar_facultad(id, data)
+    if not facultad_actualizado:
+        return jsonify({"error": "Facultad no encontrada"}), 404
+    
+    return facultad_mapping.dump(facultad_actualizado), 200
 
 @facultad_bp.route('/facultad/<hashid:id>', methods=['DELETE'])
 def delete(id: int):

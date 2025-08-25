@@ -2,8 +2,8 @@ from flask import jsonify, Blueprint, request
 from app.services import UniversidadService
 from app.mapping import UniversidadMapping
 from markupsafe import escape
+from app.validators.universidad_validator import validate_universidad
 
-from app.validators import validate_with
 
 universidad_bp = Blueprint('universidad', __name__)
 universidad_mapping = UniversidadMapping()
@@ -35,10 +35,17 @@ def eliminar_universidad(id: int):
 
 
 @universidad_bp.route('/universidad/<hashid:id>', methods=['PUT'])
-@validate_with(UniversidadMapping)
-def actualizar_universidad(universidad_data, id: int):
-    universidad = UniversidadService.actualizar(id, universidad_data)
-    return universidad_mapping.dump(universidad), 200
+def update(id: int):
+    data = request.get_json()
+    errors = validate_universidad(data)
+    if errors:
+        return jsonify({"errors": errors}), 400
+    
+    universidad_actualizado = UniversidadService.actualizar_tipo_documento(id, data)
+    if not universidad_actualizado:
+        return jsonify({"error": "Universidad no encontrada"}), 404
+    
+    return universidad_mapping.dump(universidad_actualizado), 200
 
 
 def sanitize_universidad_input(request):

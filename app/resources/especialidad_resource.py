@@ -2,8 +2,7 @@ from flask import Blueprint, request, jsonify
 from app.services.especialidad_service import EspecialidadService
 from app.models.especialidad import Especialidad
 from app import db
-
-# NO TIENE ARCHIVO VALIDATOR, HAY QUE CREARLO
+from app.validators.especialidad_validator import validate_especialidad
 
 especialidad_bp = Blueprint('especialidad', __name__)
 
@@ -25,8 +24,6 @@ def read_by_id(id: int):
 @especialidad_bp.route('/especialidad', methods=['POST'])
 def create():
     data = request.get_json()
-    if not validate_json(data, Especialidad):
-        return jsonify({"error": "Datos inválidos"}), 400
     try:
         nueva_especialidad = EspecialidadService.crear_especialidad(data)
         return jsonify(nueva_especialidad.to_dict()), 201
@@ -37,16 +34,15 @@ def create():
 @especialidad_bp.route('/especialidad/<hashid:id>', methods=['PUT'])
 def update(id: int):
     data = request.get_json()
-    if not validate_json(data, Especialidad):
-        return jsonify({"error": "Datos inválidos"}), 400
-    try:
-        especialidad_actualizada = EspecialidadService.actualizar_especialidad(
-            id, data)
-        if not especialidad_actualizada:
-            return jsonify({"error": "Especialidad no encontrada"}), 404
-        return jsonify(especialidad_actualizada.to_dict()), 200
-    except ValueError as e:
-        return jsonify({"error": str(e)}), 400
+    errors = validate_especialidad(data)
+    if errors:
+        return jsonify({"errors": errors}), 400
+    
+    especialidad_actualizado = Especialidad.actualizar_especialidad(id, data)
+    if not especialidad_actualizado:
+        return jsonify({"error": "Cargo no encontrado"}), 404
+    
+    return especialidad_mapping.dump(especialidad_actualizado), 200
 
 
 @especialidad_bp.route('/especialidad/<hashid:id>', methods=['DELETE'])

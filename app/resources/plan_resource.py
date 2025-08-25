@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from app.services.plan_service import PlanService
 from app.mapping.plan_mapping import PlanMapping
+from app.validators.plan_validator import validate_plan
 
 plan_bp = Blueprint('plan', __name__)
 plan_mapping = PlanMapping()
@@ -29,20 +30,15 @@ def create():
 @plan_bp.route('/plan/<hashid:id>', methods=['PUT'])
 def update(id: int):
     data = request.get_json()
-    try:
-        plan_actualizado = PlanService.actualizar_plan(id, data)
-        if not plan_actualizado:
-            return jsonify({"error": "Plan no encontrado"}), 404
-        return plan_mapping.dump(plan_actualizado), 200
-    except ValueError as e:
-        return jsonify({"error": str(e)}), 400
-    def test_borrar_grupo(self):
-        grupo = self.__nuevoGrupo()
-        GrupoService.crear_grupo(grupo)
-        resultado = GrupoService.borrar_grupo(grupo.id)
-        self.assertTrue(resultado)
-        grupo_buscado = GrupoService.buscar_por_id(grupo.id)
-        self.assertIsNone(grupo_buscado)
+    errors = validate_plan(data)
+    if errors:
+        return jsonify({"errors": errors}), 400
+    
+    plan_actualizado = PlanService.actualizar_plan(id, data)
+    if not plan_actualizado:
+        return jsonify({"error": "Plan no encontrado"}), 404
+    
+    return plan_mapping.dump(plan_actualizado), 200
 
 @plan_bp.route('/plan/<hashid:id>', methods=['DELETE'])
 def delete(id: int):
