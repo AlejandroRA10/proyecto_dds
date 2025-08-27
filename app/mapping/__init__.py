@@ -3,10 +3,8 @@ from .area_mapping import AreaMapping
 from .autoridad_mapping import AutoridadMapping
 from .cargo_mapping import CargoMapping
 from .categoria_cargo_mapping import CategoriaCargoMapping
-from .cursada_mapping import CursadaMapping
 from .departamento_mapping import DepartamentoMapping
 from .especialidad_mapping import EspecialidadMapping
-from .evaluacion_mapping import EvaluacionMapping
 from .facultad_mapping import FacultadMapping
 from .grado_mapping import GradoMapping
 from .grupo_mapping import GrupoMapping

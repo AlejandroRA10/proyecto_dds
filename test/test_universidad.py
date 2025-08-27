@@ -49,7 +49,7 @@ class UniversidadTestCase(unittest.TestCase):
         self.assertIsNotNone(universidad.id)
         self.assertGreaterEqual(universidad.id, 1)
         self.assertEqual(universidad.nombre, "Universidad Nacional de La Plata")
-        self.assertEqual(len(universidad.facultades), 2)  # Verifica que haya 2 facultades asociadas
+        self.assertEqual(len(universidad.facultades), 2)  
         
     def test_universidad_busqueda(self):
         universidad = self.__nuevaUniversidad()
