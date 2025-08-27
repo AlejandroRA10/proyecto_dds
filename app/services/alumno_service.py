@@ -1,5 +1,7 @@
 import datetime
 from io import BytesIO
+import json
+from typing import Dict, Any
 
 from app.models import Alumno
 from app.repositories import AlumnoRepository
@@ -76,3 +78,64 @@ class AlumnoService:
             "universidad": universidad,
             "fecha": AlumnoService.__obtener_fecha_actual()
         }
+
+    @staticmethod
+    def generar_ficha_alumno_pdf(id: int):
+        """Genera la ficha del alumno en formato PDF"""
+        alumno = AlumnoRepository.buscar_por_id(id)
+        if not alumno:
+            return None
+        
+        context = AlumnoService.__obtener_alumno(alumno)
+        
+        documento = PDFDocument()
+        return documento.generar(
+            carpeta='ficha',
+            plantilla='ficha_alumno',
+            context=context
+        )
+
+    @staticmethod
+    def generar_ficha_alumno_json(id: int):
+        """Genera la ficha del alumno en formato JSON"""
+        alumno = AlumnoRepository.buscar_por_id(id)
+        if not alumno:
+            return None
+        
+        context = AlumnoService.__obtener_alumno(alumno)
+        
+        # Estructura específica para la ficha JSON
+        ficha_json = {
+            "alumno": {
+                "nro_legajo": alumno.nro_legajo,
+                "apellido": alumno.apellido,
+                "nombre": alumno.nombre,
+                "nro_documento": alumno.nro_documento,
+                "fecha_nacimiento": alumno.fecha_nacimiento,
+                "fecha_ingreso": alumno.fecha_ingreso
+            },
+            "facultad": {
+                "nombre": context["facultad"].nombre,
+                "abreviatura": context["facultad"].abreviatura,
+                "sigla": context["facultad"].sigla
+            },
+            "especialidad": {
+                "nombre": context["especialidad"].nombre
+            },
+            "universidad": {
+                "nombre": context["universidad"].nombre
+            },
+            "fecha_generacion": context["fecha"]
+        }
+        
+        return ficha_json
+
+    @staticmethod
+    def generar_ficha_alumno(id: int, formato: str = 'json'):
+        """Genera la ficha del alumno en el formato especificado"""
+        if formato.lower() == 'pdf':
+            return AlumnoService.generar_ficha_alumno_pdf(id)
+        elif formato.lower() == 'json':
+            return AlumnoService.generar_ficha_alumno_json(id)
+        else:
+            raise ValueError(f"Formato no soportado: {formato}")

@@ -3,6 +3,7 @@ from app.services.alumno_service import AlumnoService
 from app.mapping.alumno_mapping import AlumnoMapping
 from app.validators.alumno_validator import validate_alumno
 
+#Pregunta 4 - #6
 alumno_bp = Blueprint('alumno', __name__)
 alumno_mapping = AlumnoMapping()
 
@@ -49,3 +50,35 @@ def delete(id: int):
     if not eliminado:
         return jsonify({"error": "Alumno no encontrado"}), 404
     return jsonify({"message": "Alumno eliminado"}), 200
+
+@alumno_bp.route('/alumno/<hashid:id>/ficha', methods=['GET'])
+def generar_ficha_alumno(id: int):
+    """Genera la ficha del alumno en formato PDF o JSON según el parámetro 'formato'"""
+    formato = request.args.get('formato', 'json').lower()
+    
+    try:
+        if formato == 'pdf':
+            ficha_pdf = AlumnoService.generar_ficha_alumno_pdf(id)
+            if not ficha_pdf:
+                return jsonify({"error": "Alumno no encontrado"}), 404
+            
+            from flask import send_file
+            return send_file(
+                ficha_pdf,
+                as_attachment=True,
+                download_name=f"ficha_alumno_{id}.pdf",
+                mimetype='application/pdf'
+            )
+            
+        elif formato == 'json':
+            ficha_json = AlumnoService.generar_ficha_alumno_json(id)
+            if not ficha_json:
+                return jsonify({"error": "Alumno no encontrado"}), 404
+            
+            return jsonify(ficha_json), 200
+            
+        else:
+            return jsonify({"error": "Formato no soportado. Use 'pdf' o 'json'"}), 400
+            
+    except Exception as e:
+        return jsonify({"error": f"Error al generar la ficha: {str(e)}"}), 500

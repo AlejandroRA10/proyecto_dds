@@ -33,3 +33,29 @@ class FacultadRepository:
         db.session.delete(facultad)
         db.session.commit()
         return facultad
+
+#Respondida en Issue #5 Pregunta 3
+
+# from abc import ABC, abstractmethod
+# from app.models import Facultad
+
+# class FacultadRepository(ABC):
+#     @abstractmethod
+#     def crear(self, facultad: Facultad) -> Facultad:
+#         pass
+    
+#     @abstractmethod
+#     def buscar_por_id(self, id: int) -> Facultad:
+#         pass
+    
+#     @abstractmethod
+#     def buscar_todos(self) -> list[Facultad]:
+#         pass
+    
+#     @abstractmethod
+#     def actualizar(self, facultad: Facultad) -> Facultad:
+#         pass
+    
+#     @abstractmethod
+#     def borrar_por_id(self, id: int) -> Facultad:
+#         pass
