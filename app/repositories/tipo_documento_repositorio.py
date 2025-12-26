@@ -2,7 +2,7 @@ from app import db
 from app.models.tipo_documento import TipoDocumento
 
 
-class TipoDocumentoRepositorio:
+class TipoDocumentoRepository:
     @staticmethod
     def crear(tipo_documento: TipoDocumento) -> TipoDocumento:
         db.session.add(tipo_documento)

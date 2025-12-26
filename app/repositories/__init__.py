@@ -13,6 +13,6 @@ from .materia_repositorio import MateriaRepository
 from .orientacion_repositorio import OrientacionRepository
 from .plan_repositorio import PlanRepository
 from .tipo_dedicacion_repositorio import TipoDedicacionRepository
-from .tipo_documento_repositorio import TipoDocumentoRepositorio
+from .tipo_documento_repositorio import TipoDocumentoRepository
 from .tipo_especialidad_repositorio import TipoEspecialidadRepositorio
 from .universidad_repositorio import UniversidadRepository

@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  traefik:
+    image: traefik:v2.10
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.file.filename=/dynamic/traefik_dynamic.yml"
+      - "--entrypoints.web.address=:80"
+    ports:
+      - "80:80"
+      - "8080:8080" # Traefik dashboard (insecure for dev)
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik_dynamic.yml:/dynamic/traefik_dynamic.yml:ro
+    networks:
+      - traefik-public
+
+  proyecto_api:
+    build:
+      context: ..
+      dockerfile: ./servidor_docker/Dockerfile
+    image: proyecto_api:latest
+    environment:
+      - DATABASE_URL=sqlite:///app.db
+      - SECRET_KEY=dev-secret-key
+    ports:
+      - "5000:5000"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.proyecto_api.rule=Host(`api.localhost`)"
+      - "traefik.http.routers.proyecto_api.entrypoints=web"
+      - "traefik.http.services.proyecto_api.loadbalancer.server.port=5000"
+    networks:
+      - traefik-public
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:5000/test || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+networks:
+  traefik-public:
+    driver: bridge

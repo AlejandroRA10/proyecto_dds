@@ -12,7 +12,22 @@ class FacultadService:
         return FacultadRepository.buscar_por_id(id)
     
     @staticmethod
-    def buscar_todos() -> list[Facultad]:
+    def buscar_todos(page: int = None, per_page: int = None, q: str = None):
+        """Si se pasan page/per_page o q devuelve paginación {'page','per_page','total','items'},
+        si no, devuelve la lista completa de facultades para compatibilidad hacia atrás.
+        """
+        if page is not None or per_page is not None or q is not None:
+            # normalizar valores
+            page = int(page) if page is not None else 1
+            per_page = int(per_page) if per_page is not None else 10
+            items, total = FacultadRepository.buscar_filtrados(page=page, per_page=per_page, q=q)
+            return {
+                'page': page,
+                'per_page': per_page,
+                'total': total,
+                'items': items
+            }
+
         return FacultadRepository.buscar_todos()
     
     @staticmethod

@@ -1,22 +1,50 @@
-version: '3.8'
+# ...existing code...
+version: '3.7'
 services:
-  db:
-    image: postgres:16
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: fran123421
-      POSTGRES_DB: tp1_importacion_xml
+  traefik:
+    image: traefik:v2.10
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
     ports:
-      - "5432:5432"
+      - "80:80"
+      - "8080:8080"
     volumes:
-      - pgdata:/var/lib/postgresql/data
-  app:
-    build: .
-    volumes:
-      - .:/app
-    depends_on:
-      - db
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - web
+
+  app-api:
+    build:
+      context: ..        # ajustar al contexto correcto de tu API
+      dockerfile: servidor_docker/Dockerfile
+    container_name: proyecto_api
     environment:
-      - DATABASE_URL=postgresql://usuario:contraseña@db:5432/basededatos
-volumes:
-  pgdata:
+      - FLASK_ENV=production
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.proyecto_api.rule=Host(`local.proyecto.test`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.proyecto_api.entrypoints=web"
+      - "traefik.http.services.proyecto_api.loadbalancer.server.port=5000"
+    networks:
+      - web
+
+  importer:
+    build:
+      context: ../tp_importacion_xml   # ajustar si es necesario
+      dockerfile: Dockerfile
+    container_name: proyecto_importer
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.importer.rule=Host(`local.proyecto.test`) && PathPrefix(`/import`)"
+      - "traefik.http.routers.importer.entrypoints=web"
+      - "traefik.http.services.importer.loadbalancer.server.port=5000"
+    networks:
+      - web
+
+networks:
+  web:
+    external: false
+# ...existing code...

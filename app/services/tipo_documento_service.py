@@ -1,5 +1,5 @@
-from app.models.area import TipoDocumento
-from app.repositories.area_repositorio import TipoDocumentoRepository
+from app.models.tipo_documento import TipoDocumento
+from app.repositories.tipo_documento_repositorio import TipoDocumentoRepository
 
 class TipoDocumentoService:
     @staticmethod

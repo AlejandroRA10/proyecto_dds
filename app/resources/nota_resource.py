@@ -8,8 +8,37 @@ nota_mapping = NotaMapping()
 
 @nota_bp.route('/notas', methods=['GET'])
 def read_all():
-    notas = NotaService.buscar_todos()
-    return nota_mapping.dump(notas, many=True), 200
+    # Parámetros de paginación y filtrado
+    try:
+        page = int(request.args.get('page', 1))
+    except (TypeError, ValueError):
+        page = 1
+
+    try:
+        per_page = int(request.args.get('per_page', 20))
+    except (TypeError, ValueError):
+        per_page = 20
+
+    # Filtros permitidos: inscripcion_id, valor_min, valor_max
+    filters = {
+        'inscripcion_id': request.args.get('inscripcion_id'),
+        'valor_min': request.args.get('valor_min'),
+        'valor_max': request.args.get('valor_max')
+    }
+
+    items, total = NotaService.buscar_filtrado_paginado(filters, page, per_page)
+    notas_serializadas = nota_mapping.dump(items, many=True)
+
+    total_pages = (total + per_page - 1) // per_page if per_page else 1
+
+    meta = {
+        'page': page,
+        'per_page': per_page,
+        'total': total,
+        'total_pages': total_pages
+    }
+
+    return jsonify({'items': notas_serializadas, 'meta': meta}), 200
 
 @nota_bp.route('/nota/<int:id>', methods=['GET'])
 def read_by_id(id):
@@ -35,7 +64,7 @@ def update(id: int):
     if errors:
         return jsonify({"errors": errors}), 400
     
-    nota_actualizado = NotaService.actualizar_nota(id, data)
+    nota_actualizado = NotaService.actualizar(id, data)
     if not nota_actualizado:
         return jsonify({"error": "Nota no encontrada"}), 404
     

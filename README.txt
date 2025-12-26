@@ -22,7 +22,7 @@ Este proyecto es una aplicación para la gestión académica, desarrollada en Py
    ```
    O usa Docker:
    ```
-   cd servidor-docker
+  cd servidor_docker
    docker-compose up
    ```
 

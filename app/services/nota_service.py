@@ -8,6 +8,10 @@ class NotaService:
         return NotaRepository.buscar_todos()
 
     @staticmethod
+    def buscar_filtrado_paginado(filters: dict = None, page: int = 1, per_page: int = 20):
+        return NotaRepository.buscar_filtrado_paginado(filters or {}, page, per_page)
+
+    @staticmethod
     def buscar_por_id(id: int):
         return NotaRepository.buscar_por_id(id)
 

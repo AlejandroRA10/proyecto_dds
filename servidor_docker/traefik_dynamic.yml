@@ -1,0 +1,23 @@
+http:
+  http:
+    routers:
+      proyecto_api_router:
+        rule: "Host(`api.localhost`)"
+        entryPoints:
+          - web
+        service: proyecto_api_service
+        priority: 10
+        middlewares:
+          - "strip_api@file"
+
+    services:
+      proyecto_api_service:
+        loadBalancer:
+          servers:
+            - url: "http://proyecto_api:5000"
+
+    middlewares:
+      strip_api:
+        stripPrefix:
+          prefixes:
+            - /api

@@ -1,5 +1,5 @@
-from app.models.area import Especialidad
-from app.repositories.area_repositorio import EspecialidadRepository
+from app.models.especialidad import Especialidad
+from app.repositories.especialidad_repositorio import EspecialidadRepository
 
 class EspecialidadService:
     @staticmethod

@@ -1,31 +1,52 @@
-services:    
-  postgresql:
-    container_name: postgresql-servidor
-    image: postgres:16-bullseye
+services:
+  traefik:
+    image: traefik:v2.10
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
     ports:
-      - "5432:5432"
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
-      - mired
+      - web
+
+  app-api:
+    build:
+      context: ..        # ajustar al contexto correcto de tu API
+      dockerfile: servidor-docker/Dockerfile
+    container_name: proyecto_api
     environment:
-      POSTGRES_PASSWORD: alejandro2004
-      POSTGRES_DB: prueba_1
-      POSTGRES_USER: postgress
-      #PGDATA=/var/lib/postgresql/data/pgdata
-    volumes:
-      - ./data:/var/lib/postgresql/data
-      - ./sql:/docker-entrypoint-initdb.d
-    restart: always                                
-  app:
-    build: .
-    volumes:
-      - .:/app
-    depends_on:
-      - postgresql
-    environment:
-      - DATABASE_URL=postgresql://usuario:contraseña@postgresql:5432/prueba_1
-volumes:
-  pgdata:
+      - FLASK_ENV=production
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.proyecto_api.rule=Host(`local.proyecto.test`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.proyecto_api.entrypoints=web"
+      - "traefik.http.services.proyecto_api.loadbalancer.server.port=5000"
+    networks:
+      - web
+
+  importer:
+    build:
+      context: ../tp_importacion_xml   # ajustar si es necesario
+      dockerfile: Dockerfile
+    container_name: proyecto_importer
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.importer.rule=Host(`local.proyecto.test`) && PathPrefix(`/import`)"
+      - "traefik.http.routers.importer.entrypoints=web"
+      - "traefik.http.services.importer.loadbalancer.server.port=5000"
+    networks:
+      - web
+    profiles:
+      - importer
 
 networks:
-  mired:
-    external: true
+  web:
+    external: false
+# ...existing code...
+
+

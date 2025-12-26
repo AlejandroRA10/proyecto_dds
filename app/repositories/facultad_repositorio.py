@@ -1,5 +1,7 @@
 from app import db
 from app.models import Facultad
+from sqlalchemy import or_
+from app.utils.pagination import apply_pagination
 
 
 class FacultadRepository:
@@ -16,6 +18,28 @@ class FacultadRepository:
     @staticmethod
     def buscar_todos():
         return db.session.query(Facultad).all()
+
+    @staticmethod
+    def buscar_filtrados(page: int = 1, per_page: int = 10, q: str = None):
+        """Devuelve una tupla (items, total) aplicando filtro por nombre, abreviatura o sigla y paginación."""
+        query = db.session.query(Facultad)
+        if q:
+            likeq = f"%{q}%"
+            query = query.filter(
+                or_(
+                    Facultad.nombre.ilike(likeq),
+                    Facultad.abreviatura.ilike(likeq),
+                    Facultad.sigla.ilike(likeq)
+                )
+            )
+
+        # reutilizar helper de paginación
+        if page and per_page:
+            return apply_pagination(query, page, per_page)
+
+        items = query.all()
+        total = len(items)
+        return items, total
 
     @staticmethod
     def actualizar_facultad(facultad) -> Facultad:

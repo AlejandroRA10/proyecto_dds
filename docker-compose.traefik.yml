@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  traefik:
+    image: traefik:v2.10
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+    ports:
+      - "80:80"
+      - "8080:8080" # Traefik dashboard (insecure for dev)
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - traefik-public
+
+  proyecto_api:
+    build:
+      context: .
+      dockerfile: ./servidor_docker/Dockerfile
+    image: proyecto_api:latest
+    container_name: proyecto_api
+    environment:
+      - DATABASE_URL=sqlite:///app.db
+      - SECRET_KEY=dev-secret-key
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.proyecto_api.rule=Host(`api.localhost`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.proyecto_api.entrypoints=web"
+      - "traefik.http.services.proyecto_api.loadbalancer.server.port=5000"
+    networks:
+      - traefik-public
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:5000/test || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # importer:
+  #   build:
+  #     context: ./tp_importacion_xml
+  #     dockerfile: Dockerfile
+  #   image: proyecto_importer:latest
+  #   labels:
+  #     - "traefik.enable=true"
+  #     - "traefik.http.routers.importer.rule=Host(`api.localhost`) && PathPrefix(`/import`)"
+  #     - "traefik.http.routers.importer.entrypoints=web"
+  #     - "traefik.http.services.importer.loadbalancer.server.port=5000"
+  #   networks:
+  #     - traefik-public
+  #   profiles:
+  #     - importer
+
+networks:
+  traefik-public:
+    driver: bridge
